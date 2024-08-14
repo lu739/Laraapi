@@ -6,9 +6,9 @@ use App\Enum\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Product\StoreProductRequest;
 use App\Http\Requests\Api\Product\StoreProductReviewRequest;
+use App\Http\Requests\Api\Product\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -89,5 +89,22 @@ class ProductController extends Controller
         ]);
 
         return $review->only('id');
+    }
+
+    public function update(UpdateProductRequest $request, Product $product)
+    {
+        if ($request->method() === 'PUT') {
+            $product->update([
+                'name' => $request->input('name') ?? null,
+                'description' => $request->input('description') ?? null,
+                'price' => $request->input('price') ?? null,
+                'count' => $request->input('count') ?? null,
+                'status' => $request->enum('status', ProductStatus::class),
+            ]);
+        } else {
+            $product->update(
+                $request->only('name', 'description', 'price', 'count', 'status')
+            );
+        }
     }
 }
