@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Product;
 
 use App\Enum\ProductStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Product\StoreProductRequest;
+use App\Http\Requests\Api\Product\StoreProductReviewRequest;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -58,7 +60,7 @@ class ProductController extends Controller
         ];
     }
 
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
         $product = auth()->user()->products()->create([
         // $product = Product::query()->create([
@@ -78,7 +80,7 @@ class ProductController extends Controller
         return $product;
     }
 
-    public function review(Request $request, Product $product)
+    public function review(StoreProductReviewRequest $request, Product $product)
     {
         $review = $product->reviews()->create([
             'user_id' => auth()->id(),
