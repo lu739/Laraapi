@@ -16,4 +16,6 @@ Route::
         Route::get('/{product}', 'show');
         Route::post('/', 'store');
         Route::post('/{product}/review', 'review')->name('product.review.store');
+        Route::put('/{product}', 'update')->name('product.update');
+        Route::patch('/{product}', 'update')->name('product.update');
 });
