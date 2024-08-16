@@ -9,13 +9,12 @@ Route::get('/user', function (Request $request) {
 
 Route::
     // middleware('auth:sanctum')->
+    apiResource('products',\App\Http\Controllers\Api\Product\ProductController::class);
+
+Route::
+    // middleware('auth:sanctum')->
     controller(\App\Http\Controllers\Api\Product\ProductController::class)
     ->prefix('products')
     ->group(function () {
-        Route::get('/', 'index');
-        Route::get('/{product}', 'show');
-        Route::post('/', 'store');
-        Route::post('/{product}/review', 'review')->name('product.review.store');
-        Route::put('/{product}', 'update')->name('product.update');
-        Route::patch('/{product}', 'update')->name('product.update');
+        Route::post('/{product}/review', 'addReview')->name('product.review.store');
 });

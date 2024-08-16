@@ -9,17 +9,16 @@ use App\Http\Requests\Api\Product\StoreProductReviewRequest;
 use App\Http\Requests\Api\Product\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-class ProductController extends Controller
+class _ProductController extends Controller
 {
     public function __construct()
     {
         auth()->login(User::query()->where('is_admin', true)->inRandomOrder()->first());
     }
 
-    public function index()
+/*    public function index()
     {
         $products = Product::query()
             ->select(['id','name','price'])
@@ -34,9 +33,9 @@ class ProductController extends Controller
         ]);
 
         return $products;
-    }
+    }*/
 
-    public function show(Product $product)
+/*    public function show(Product $product)
     {
         if ($product->status === ProductStatus::DRAFT) {
             return response()->json([
@@ -64,7 +63,7 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         $product = auth()->user()->products()->create([
-            // $product = Product::query()->create([
+        // $product = Product::query()->create([
             'name' => $request->str('name'),
             'description' => $request->str('description'),
             'price' => $request->input('price'),
@@ -79,9 +78,20 @@ class ProductController extends Controller
         }
 
         return $product;
+    }*/
+
+    public function review(StoreProductReviewRequest $request, Product $product)
+    {
+        $review = $product->reviews()->create([
+            'user_id' => auth()->id(),
+            'text' => $request->str('text'),
+            'rating' => $request->integer('rating'),
+        ]);
+
+        return $review->only('id');
     }
 
-    public function update(UpdateProductRequest $request, Product $product)
+/*    public function update(UpdateProductRequest $request, Product $product)
     {
         if ($request->method() === 'PUT') {
             $product->update([
@@ -96,25 +106,14 @@ class ProductController extends Controller
                 $request->only('name', 'description', 'price', 'count', 'status')
             );
         }
-    }
+    }*/
 
-    public function destroy(Product $product)
+/*    public function delete(Product $product)
     {
         $product->delete();
 
         return response()->json([
             'message' => 'success'
         ],204);
-    }
-
-    public function addReview(StoreProductReviewRequest $request, Product $product)
-    {
-        $review = $product->reviews()->create([
-            'user_id' => auth()->id(),
-            'text' => $request->str('text'),
-            'rating' => $request->integer('rating'),
-        ]);
-
-        return $review->only('id');
-    }
+    }*/
 }
