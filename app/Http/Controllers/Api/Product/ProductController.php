@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Product\StoreProductRequest;
 use App\Http\Requests\Api\Product\StoreProductReviewRequest;
 use App\Http\Requests\Api\Product\UpdateProductRequest;
+use App\Http\Resources\Product\MinifiedProductResource;
+use App\Http\Resources\Product\ProductResource;
 use App\Models\Product;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -17,7 +19,6 @@ class ProductController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            // 'auth',
             new Middleware('admin', only: ['store', 'update', 'destroy']),
             new Middleware('draft', only: ['show']),
         ];
@@ -30,39 +31,17 @@ class ProductController extends Controller implements HasMiddleware
             ->whereStatus(ProductStatus::PUBLISHED)
             ->get();
 
-        $products = $products->map(fn($product) => [
-            'id' => $product->id,
-            'name' => $product->name,
-            'price' => $product->price,
-            'rating' => $product->rating(),
-        ]);
-
-        return $products;
+        return MinifiedProductResource::collection($products);
     }
 
     public function show(Product $product)
     {
-        return [
-            'id' => $product->id,
-            'name' => $product->name,
-            'description' => $product->description,
-            'rating' => $product->rating(),
-            'price' => $product->price,
-            'count' => $product->count,
-            'images' => $product->images()->get()->map(fn($image) => $image->path),
-            'reviews' => $product->reviews->map(fn($review) => [
-                'id' => $review->id,
-                'userName' => $review->user->name,
-                'rating' => $review->rating,
-                'text' => $review->text,
-            ]),
-        ];
+        return ProductResource::make($product)->resolve();
     }
 
     public function store(StoreProductRequest $request)
     {
         $product = auth()->user()->products()->create([
-            // $product = Product::query()->create([
             'name' => $request->str('name'),
             'description' => $request->str('description'),
             'price' => $request->input('price'),
