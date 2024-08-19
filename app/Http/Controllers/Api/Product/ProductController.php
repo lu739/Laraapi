@@ -8,15 +8,19 @@ use App\Http\Requests\Api\Product\StoreProductRequest;
 use App\Http\Requests\Api\Product\StoreProductReviewRequest;
 use App\Http\Requests\Api\Product\UpdateProductRequest;
 use App\Models\Product;
-use App\Models\User;
-use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Storage;
 
-class ProductController extends Controller
+class ProductController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        auth()->login(User::query()->where('is_admin', true)->inRandomOrder()->first());
+        return [
+            // 'auth',
+            new Middleware('admin', only: ['store', 'update', 'destroy']),
+            new Middleware('draft', only: ['show']),
+        ];
     }
 
     public function index()
@@ -38,12 +42,6 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        if ($product->status === ProductStatus::DRAFT) {
-            return response()->json([
-                'message' => 'product not found'
-            ], 404);
-        }
-
         return [
             'id' => $product->id,
             'name' => $product->name,
