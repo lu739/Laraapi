@@ -41,4 +41,8 @@ class Product extends Model
     public function isDraft() {
         return $this->status === ProductStatus::DRAFT;
     }
+
+    public function imagesList() {
+        return $this->images()->get()->map(fn($image) => $image->path);
+    }
 }
