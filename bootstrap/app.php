@@ -12,7 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->appendToGroup('web', \App\Http\Middleware\VerifyCsrfToken::class);
+        // $middleware->appendToGroup('web', \App\Http\Middleware\VerifyCsrfToken::class);
+        // $middleware->append('api', \App\Http\Middleware\AdminMiddleware::class);
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'draft' => \App\Http\Middleware\DraftProduct::class,
+        ]);
+        // $middleware->appendToGroup('api',\App\Http\Middleware\AdminMiddleware::class);
+        // $middleware->appendToGroup('api',\App\Http\Middleware\DraftProduct::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
