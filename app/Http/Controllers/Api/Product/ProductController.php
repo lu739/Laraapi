@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Api\Product;
 
-use App\Enum\ProductStatus;
+use App\Facades\ProductFacade;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Product\StoreProductRequest;
 use App\Http\Requests\Api\Product\StoreProductReviewRequest;
 use App\Http\Requests\Api\Product\UpdateProductRequest;
 use App\Http\Resources\Product\MinifiedProductResource;
 use App\Http\Resources\Product\ProductResource;
+use App\Http\Resources\ProductReview\ProductReviewResource;
 use App\Models\Product;
+use App\Services\Product\ProductService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller implements HasMiddleware
 {
@@ -24,12 +26,15 @@ class ProductController extends Controller implements HasMiddleware
         ];
     }
 
+/*    public function index(ProductService $service)
+    {
+        $products = $service->published();
+
+        return MinifiedProductResource::collection($products);
+    }    */
     public function index()
     {
-        $products = Product::query()
-            ->select(['id','name','price'])
-            ->whereStatus(ProductStatus::PUBLISHED)
-            ->get();
+        $products = ProductFacade::published();
 
         return MinifiedProductResource::collection($products);
     }
@@ -39,59 +44,31 @@ class ProductController extends Controller implements HasMiddleware
         return ProductResource::make($product)->resolve();
     }
 
-    public function store(StoreProductRequest $request)
+    public function store(StoreProductRequest $request, ProductService $service)
     {
-        $product = auth()->user()->products()->create([
-            'name' => $request->str('name'),
-            'description' => $request->str('description'),
-            'price' => $request->input('price'),
-            'count' => $request->integer('count'),
-            'status' => $request->enum('status', ProductStatus::class),
-        ]);
+        $product = $service->store($request);
 
-        foreach ($request->images as $image) {
-            $product->images()->create([
-                'path' => config('app.url') . Storage::url($image->storePublicly('images')),
-            ]);
-        }
-
-        return $product;
+        return responseOk(201, ['id' => $product->id]);
     }
 
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product, ProductService $service)
     {
-        if ($request->method() === 'PUT') {
-            $product->update([
-                'name' => $request->input('name') ?? null,
-                'description' => $request->input('description') ?? null,
-                'price' => $request->input('price') ?? null,
-                'count' => $request->input('count') ?? null,
-                'status' => $request->enum('status', ProductStatus::class),
-            ]);
-        } else {
-            $product->update(
-                $request->only('name', 'description', 'price', 'count', 'status')
-            );
-        }
+        $product = $service->setProduct($product)->update($request);
+
+        return ProductResource::make($product)->resolve();
     }
 
-    public function destroy(Product $product)
+    public function destroy(Product $product): JsonResponse
     {
         $product->delete();
 
-        return response()->json([
-            'message' => 'success'
-        ],204);
+        return responseOk(200);
     }
 
-    public function addReview(StoreProductReviewRequest $request, Product $product)
+    public function addReview(StoreProductReviewRequest $request, Product $product, ProductService $service)
     {
-        $review = $product->reviews()->create([
-            'user_id' => auth()->id(),
-            'text' => $request->str('text'),
-            'rating' => $request->integer('rating'),
-        ]);
+        $review = $service->setProduct($product)->addReview($request);
 
-        return $review->only('id');
+        return ProductReviewResource::make($review)->resolve();
     }
 }
