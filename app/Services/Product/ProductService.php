@@ -7,6 +7,7 @@ use App\Http\Requests\Api\Product\StoreProductRequest;
 use App\Http\Requests\Api\Product\StoreProductReviewRequest;
 use App\Http\Requests\Api\Product\UpdateProductRequest;
 use App\Models\Product;
+use App\Services\Product\DTO\CreateProductDto;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,17 +28,13 @@ class ProductService
             ->get();
     }
 
-    public function store(StoreProductRequest $request): Product
+    public function store(CreateProductDto $dto): Product
     {
-        $product = auth()->user()->products()->create([
-            'name' => $request->str('name'),
-            'description' => $request->str('description'),
-            'price' => $request->input('price'),
-            'count' => $request->integer('count'),
-            'status' => $request->enum('status', ProductStatus::class),
-        ]);
+        $images = $dto->images ?? [];
 
-        foreach ($request->images as $image) {
+        $product = auth()->user()->products()->create($dto->toArray());
+
+        foreach ($images as $image) {
             $product->images()->create([
                 'path' => config('app.url') . Storage::url($image->storePublicly('images')),
             ]);

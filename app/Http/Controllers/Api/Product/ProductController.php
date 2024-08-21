@@ -11,6 +11,7 @@ use App\Http\Resources\Product\MinifiedProductResource;
 use App\Http\Resources\Product\ProductResource;
 use App\Http\Resources\ProductReview\ProductReviewResource;
 use App\Models\Product;
+use App\Services\Product\DTO\CreateProductDto;
 use App\Services\Product\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -44,9 +45,11 @@ class ProductController extends Controller implements HasMiddleware
         return ProductResource::make($product)->resolve();
     }
 
-    public function store(StoreProductRequest $request, ProductService $service)
+    public function store(StoreProductRequest $request)
     {
-        $product = $service->store($request);
+        $dto = CreateProductDto::from($request);
+
+        $product = ProductFacade::store($dto);
 
         return responseOk(201, ['id' => $product->id]);
     }
