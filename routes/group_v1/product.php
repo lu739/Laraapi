@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 
 Route::
-    middleware('auth:sanctum')->
     apiResource('products',\App\Http\Controllers\Api\Product\ProductController::class);
 
 Route::
